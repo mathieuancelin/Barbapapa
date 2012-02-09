@@ -1,5 +1,6 @@
 package com.foo.barbapapa;
 
+import com.foo.barbapapa.api.Template;
 import com.foo.barbapapa.api.TypedTemplate;
 import com.sampullara.mustache.Mustache;
 import com.sampullara.mustache.MustacheBuilder;
@@ -20,7 +21,7 @@ public class BarbapapaTypedTemplateImpl<T> implements TypedTemplate<T> {
     private T model;
     
     BarbapapaTypedTemplateImpl(BarbapapaTemplatesManager manager) {
-        this.manager = manager;
+        this.manager = manager; 
     }
     
     BarbapapaTypedTemplateImpl(String name, BarbapapaTemplatesManager manager) {
@@ -51,6 +52,13 @@ public class BarbapapaTypedTemplateImpl<T> implements TypedTemplate<T> {
     public TypedTemplate setModel(T model) {
         scope = new Scope(model);
         this.model = model;
+        if (mustache == null) {
+            Class<?> clazz = model.getClass();
+            if (clazz.isAnnotationPresent(Template.class)) {
+                Template t = clazz.getAnnotation(Template.class);
+                select(t.value());
+            }
+        }
         return this;
     }
 }

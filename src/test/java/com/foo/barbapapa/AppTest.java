@@ -116,6 +116,17 @@ public class AppTest {
     }
     
     @Test
+    public void testAutoTypedTemplate() {
+        TypedTemplate<IndexTemplate> typedTemplate = instTyped.get(); // because junit class injection is performed before fakeInit
+        StringWriter sw = new StringWriter();
+
+        typedTemplate.setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
+        typedTemplate.writeTo(sw);
+        
+        assertSameTemplates(sw);
+    }
+    
+    @Test
     public void testMustache() throws Exception {
         MustacheBuilder builder = new MustacheBuilder(new File("src/test/resources/templates"));
         Mustache mustache = builder.parseFile("index.html");
