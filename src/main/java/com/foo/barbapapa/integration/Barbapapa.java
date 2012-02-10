@@ -1,4 +1,4 @@
-package com.foo.barbapapa;
+package com.foo.barbapapa.integration;
 
 import java.io.File;
 import java.net.URI;

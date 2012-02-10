@@ -1,5 +1,6 @@
 package com.foo.barbapapa;
 
+import com.foo.barbapapa.BarbapapaTemplatesManager.ManagerHolder;
 import com.foo.barbapapa.api.SelectedTemplateBuilder;
 import com.foo.barbapapa.api.TemplateBuilder;
 import com.sampullara.mustache.Mustache;
@@ -15,18 +16,21 @@ public class BarbapapaTemplateBuilderImpl implements TemplateBuilder, SelectedTe
     private final Scope scope;
     private Mustache mustache;
     private MustacheBuilder builder;
-
-    private BarbapapaTemplatesManager manager;
+    private String name;
+    private ManagerHolder manager;
     
-    BarbapapaTemplateBuilderImpl(BarbapapaTemplatesManager manager) {
+    BarbapapaTemplateBuilderImpl(ManagerHolder manager) {
         this.scope = new Scope();
         this.manager = manager;
     }
     
-    BarbapapaTemplateBuilderImpl(String name, BarbapapaTemplatesManager manager) {
+    BarbapapaTemplateBuilderImpl(String name, ManagerHolder manager) {
         this.scope = new Scope();
         this.manager = manager;
-        select(name);
+        this.name = name;
+        if (manager.isSet()) {
+            select(name);
+        }
     }
     
     public SelectedTemplateBuilder select(String name) {
@@ -46,6 +50,9 @@ public class BarbapapaTemplateBuilderImpl implements TemplateBuilder, SelectedTe
 
     public void writeTo(Writer wr) {
         try {
+            if (builder == null) {
+                select(name);
+            }
             scope.put("root", manager.getRoot());
             FutureWriter writer = new FutureWriter(wr);
             mustache.execute(writer, scope);

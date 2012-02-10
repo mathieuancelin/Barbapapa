@@ -12,9 +12,11 @@ import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.*;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class BarbapapaTemplatesManager {
@@ -29,39 +31,59 @@ public class BarbapapaTemplatesManager {
     
     private List<MustacheTemplate> templatesDef;
     
+    @Inject Event<RegisterTemplatesRoot> register; 
+    @Inject Event<BarbapapaTemplatesManager.ComputeTemplates> compute;
+    
+    private ManagerHolder holder = new ManagerHolder();
+    
+    public void initBarbapapa(@Observes BarbapapaInit evt) {
+        register.fire(new RegisterTemplatesRoot(evt.root, evt.base));
+        compute.fire(new BarbapapaTemplatesManager.ComputeTemplates());
+    }
+    
+    public static class BarbapapaInit {
+        public final String root;
+        public final String base;
+
+        public BarbapapaInit(String root, String base) {
+            this.root = root;
+            this.base = base;
+        }
+    }
+    
     @Produces @For("")
     public TemplateModel getModel(InjectionPoint p) throws MustacheException {
         For f = findAnnotation(p.getQualifiers());
         if (f != null) {
-            return new BarbapapaTemplateModelImpl(f.value(), this);
+            return new BarbapapaTemplateModelImpl(f.value(), holder);
         }
         throw new RuntimeException("Unable to find template");
     }
     
     @Produces
     public TemplateBuilder getBuilder() {
-        return new BarbapapaTemplateBuilderImpl(this);
+        return new BarbapapaTemplateBuilderImpl(holder);
     }
     
     @Produces @For("")
     public SelectedTemplateBuilder getSelectedBuilder(InjectionPoint p) {
         For f = findAnnotation(p.getQualifiers());
         if (f != null) {
-            return new BarbapapaTemplateBuilderImpl(f.value(), this);
+            return new BarbapapaTemplateBuilderImpl(f.value(), holder);
         }
         throw new RuntimeException("Unable to find template");
     }
     
     @Produces
     public <T> TypedTemplate<T> getTypedTemplate() {
-        return new BarbapapaTypedTemplateImpl<T>(this);
+        return new BarbapapaTypedTemplateImpl<T>(holder);
     }
     
     @Produces @For("")
     public <T> TypedTemplate<T> getSelectedTypedTemplate(InjectionPoint p) {
         For f = findAnnotation(p.getQualifiers());
         if (f != null) {
-            return new BarbapapaTypedTemplateImpl<T>(f.value(), this);
+            return new BarbapapaTypedTemplateImpl<T>(f.value(), holder);
         }
         throw new RuntimeException("Unable to find template");
     }
@@ -85,6 +107,7 @@ public class BarbapapaTemplatesManager {
             templates.put(template.type, builder.parseFile(template.name));
         }
         System.out.println("Ready to go !!!");
+        holder.setManager(this);
     }
     
     public boolean isWritable(Class<?> type, String media) {
@@ -186,6 +209,27 @@ public class BarbapapaTemplatesManager {
         public MustacheTemplate(Class<?> type, String name) {
             this.type = type;
             this.name = name;
+        }
+    }
+    
+    public static class ManagerHolder {
+        
+        private BarbapapaTemplatesManager manager;
+        
+        public boolean isSet() {
+            return manager != null;
+        }
+
+        public String getRoot() {
+            return manager.getRoot();
+        }
+        
+        public String getBase() {
+            return manager.getBase();
+        }
+
+        public void setManager(BarbapapaTemplatesManager manager) {
+            this.manager = manager;
         }
     }
 }

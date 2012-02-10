@@ -1,5 +1,6 @@
-package com.foo.barbapapa;
+package com.foo.barbapapa.integration;
 
+import com.foo.barbapapa.BarbapapaTemplatesManager;
 import com.foo.barbapapa.api.Writable;
 import com.sampullara.mustache.MustacheException;
 import java.io.IOException;

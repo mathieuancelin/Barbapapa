@@ -1,5 +1,6 @@
 package com.foo.barbapapa;
 
+import com.foo.barbapapa.BarbapapaTemplatesManager.ManagerHolder;
 import com.foo.barbapapa.api.Template;
 import com.foo.barbapapa.api.TypedTemplate;
 import com.sampullara.mustache.Mustache;
@@ -16,17 +17,20 @@ public class BarbapapaTypedTemplateImpl<T> implements TypedTemplate<T> {
     private Mustache mustache;
     private MustacheBuilder builder;
 
-    private BarbapapaTemplatesManager manager;
+    private ManagerHolder manager;
     
-    private T model;
-    
-    BarbapapaTypedTemplateImpl(BarbapapaTemplatesManager manager) {
+    private String name;
+        
+    BarbapapaTypedTemplateImpl(ManagerHolder manager) {
         this.manager = manager; 
     }
     
-    BarbapapaTypedTemplateImpl(String name, BarbapapaTemplatesManager manager) {
+    BarbapapaTypedTemplateImpl(String name, ManagerHolder manager) {
         this.manager = manager;
-        select(name);
+        this.name = name;
+        if (manager.isSet()) {
+            select(name);
+        }
     }
     
     public TypedTemplate select(String name) {
@@ -41,6 +45,9 @@ public class BarbapapaTypedTemplateImpl<T> implements TypedTemplate<T> {
 
     public void writeTo(Writer wr) {
         try {
+            if (builder == null) {
+                select(name);
+            }
             scope.put("root", manager.getRoot());
             FutureWriter writer = new FutureWriter(wr);
             mustache.execute(writer, scope);
@@ -51,7 +58,6 @@ public class BarbapapaTypedTemplateImpl<T> implements TypedTemplate<T> {
 
     public TypedTemplate setModel(T model) {
         scope = new Scope(model);
-        this.model = model;
         if (mustache == null) {
             Class<?> clazz = model.getClass();
             if (clazz.isAnnotationPresent(Template.class)) {

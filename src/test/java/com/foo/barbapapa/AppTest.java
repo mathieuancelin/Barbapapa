@@ -1,5 +1,6 @@
 package com.foo.barbapapa;
 
+import com.foo.barbapapa.BarbapapaTemplatesManager.BarbapapaInit;
 import com.foo.barbapapa.IndexTemplate.Item;
 import com.foo.barbapapa.api.For;
 import com.foo.barbapapa.api.TemplateBuilder;
@@ -16,7 +17,6 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import javax.enterprise.event.Event;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import junit.framework.Assert;
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -39,22 +39,22 @@ public class AppTest {
         return arch;
     }
     
-    public static final BarbapapaListener.BarbapapaInit initEvt = 
-            new BarbapapaListener.BarbapapaInit("fake", "src/test/resources/templates");
+    public static final BarbapapaInit initEvt = 
+            new BarbapapaInit("fake", "src/test/resources/templates");
     public static final List<Item> items = 
             Arrays.asList(new Item[] {new Item("Item1"), new Item("Item2")});
 
-    @Inject Event<BarbapapaListener.BarbapapaInit> init;
+    @Inject Event<BarbapapaInit> init;
     
     @Inject IndexTemplate template;
         
-    @Inject @For("index.html") Instance<TemplateModel> instModel;
+    @Inject @For("index.html") TemplateModel model;
     
-    @Inject Instance<TemplateBuilder> instBuilder;
+    @Inject TemplateBuilder builder;
     
-    @Inject @For("index.html") Instance<TypedTemplate<IndexTemplate>> instSelectedTyped;
+    @Inject @For("index.html") TypedTemplate<IndexTemplate> selectedTyped;
     
-    @Inject Instance<TypedTemplate<IndexTemplate>> instTyped;
+    @Inject TypedTemplate<IndexTemplate> typed;
     
     @Before
     public void init() {
@@ -73,7 +73,6 @@ public class AppTest {
         
     @Test
     public void testTemplateModel() {
-        TemplateModel model = instModel.get(); // because junit class injection is performed before fakeInit
         StringWriter sw = new StringWriter();
         
         model.attr("title", "Items").attr("items", items);
@@ -84,7 +83,6 @@ public class AppTest {
     
     @Test
     public void testTemplateBuilder() {
-        TemplateBuilder builder = instBuilder.get(); // because junit class injection is performed before fakeInit
         StringWriter sw = new StringWriter();
 
         builder.select("index.html").attr("title", "Items").attr("items", items);
@@ -95,33 +93,30 @@ public class AppTest {
     
     @Test
     public void testSelectedTypedTemplate() {
-        TypedTemplate<IndexTemplate> typedTemplate = instSelectedTyped.get(); // because junit class injection is performed before fakeInit
         StringWriter sw = new StringWriter();
 
-        typedTemplate.setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
-        typedTemplate.writeTo(sw);
+        selectedTyped.setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
+        selectedTyped.writeTo(sw);
         
         assertSameTemplates(sw);
     }
     
     @Test
     public void testTypedTemplate() {
-        TypedTemplate<IndexTemplate> typedTemplate = instTyped.get(); // because junit class injection is performed before fakeInit
         StringWriter sw = new StringWriter();
 
-        typedTemplate.select("index.html").setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
-        typedTemplate.writeTo(sw);
+        typed.select("index.html").setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
+        typed.writeTo(sw);
         
         assertSameTemplates(sw);
     }
     
     @Test
     public void testAutoTypedTemplate() {
-        TypedTemplate<IndexTemplate> typedTemplate = instTyped.get(); // because junit class injection is performed before fakeInit
         StringWriter sw = new StringWriter();
 
-        typedTemplate.setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
-        typedTemplate.writeTo(sw);
+        typed.setModel(new IndexTemplate().title("Items").addItem("Item1").addItem("Item2"));
+        typed.writeTo(sw);
         
         assertSameTemplates(sw);
     }

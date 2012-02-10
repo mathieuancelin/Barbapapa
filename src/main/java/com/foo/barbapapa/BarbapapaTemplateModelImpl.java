@@ -1,5 +1,6 @@
 package com.foo.barbapapa;
 
+import com.foo.barbapapa.BarbapapaTemplatesManager.ManagerHolder;
 import com.foo.barbapapa.api.TemplateModel;
 import com.sampullara.mustache.Mustache;
 import com.sampullara.mustache.MustacheBuilder;
@@ -14,19 +15,13 @@ public class BarbapapaTemplateModelImpl implements TemplateModel {
     private Scope scope;
     private Mustache mustache;
     private MustacheBuilder builder;
-    private String root;
-    
     private final String name;
+    private ManagerHolder manager;
     
-    private BarbapapaTemplatesManager manager;
-    
-    public BarbapapaTemplateModelImpl(String name, BarbapapaTemplatesManager manager) throws MustacheException {
+    public BarbapapaTemplateModelImpl(String name, ManagerHolder manager) throws MustacheException {
         this.name = name;
         this.manager = manager;
         this.scope = new Scope();
-        this.builder = new MustacheBuilder(new File(manager.getBase()));
-        mustache = builder.parseFile(name);
-        this.root = manager.getRoot();
     }
    
     public TemplateModel attr(String name, Object o) {
@@ -36,7 +31,13 @@ public class BarbapapaTemplateModelImpl implements TemplateModel {
     
     public void writeTo(Writer wr) {
         try {
-            scope.put("root", root);
+            if (builder == null) {
+                builder = new MustacheBuilder(new File(manager.getBase()));
+            }
+            if (mustache == null) {
+                mustache = builder.parseFile(name);
+            }
+            scope.put("root", manager.getRoot());
             FutureWriter writer = new FutureWriter(wr);
             mustache.execute(writer, scope);
         } catch (Exception e) {
